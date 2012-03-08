@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>File API</title>
+  <link href="css/bootstrap.min.css" rel="stylesheet">
+  <link href="css/prettify.css" rel="stylesheet">
+  <link href="css/styles.css" rel="stylesheet">
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+  <![endif]-->
+</head>
+<body onload="prettyPrint()">
+  <div class="container">
+    <h1>File API</h1>
+    <h2>Check browser support</h2>
+    <pre class="prettyprint">
+if (window.File &amp;&amp; window.FileReader &amp;&amp; window.FileList &amp;&amp; window.Blob) {
+  // Do your thang.
+}
+else {
+  while(1) alert('FILE API OR GTFO');
+}</pre>
+
+    <h2>Getting basic file infos</h2>
+    <input type="file" id="files" name="files" multiple />
+    <pre class="prettyprint" id="file-infos"></pre>
+
+    <pre class="prettyprint">
+function showFileInfos(e) {
+  var infos = {}, file;
+  var fileList = e.target.files;
+
+  for(var i = 0; i &lt; fileList.length; i++) {
+    file = fileList[i];
+    infos[file.name] = {
+      size: bytesToSize(file.size),
+      type: file.type || 'n/a',
+      lastModifiedDate: file.lastModifiedDate ? file.lastModifiedDate.toLocaleDateString() : 'n/a'
+    }
+  }
+  document.getElementById('file-infos').innerHTML = JSON.stringify(infos, null, 2);
+}
+
+document.getElementById('files').addEventListener('change', showFileInfos, false);</pre>
+
+    <h2>Reading file content</h2>
+    <input type="file" id="pictures" name="pictures" multiple />
+    <output id="thumbnails"></output>
+    <pre class="prettyprint">
+function handlePics(e) {
+  var file;
+  var fileList = e.target.files;
+  var thumbnails = document.getElementById('thumbnails');
+
+  for (var i = 0; i &lt; fileList.length; i++) {
+    file = fileList[i];
+    if (!file.type.match('image.*')) continue;
+
+    var reader = new FileReader();
+
+    reader.onload = function(e){
+      var span = document.createElement('span');
+      span.innerHTML = '&lt;img src="' + e.target.result + '"/&gt;';
+      thumbnails.insertBefore(span, null);
+    }
+
+    reader.readAsDataURL(file);
+  }
+}
+
+document.getElementById('pictures').addEventListener('change', handlePics, false);</pre>
+
+    <h2>Observing read progress</h2>
+    <input type="file" id="huge-file-palooza" name="huge-file-palooza">
+    <p>
+      <progress id="progress-bar" max="100" value=""></progress>
+      <span id="progress-infos">0</span>
+    </p>
+    <pre class="prettyprint">
+function handleHugeFile(e) {
+  var file = e.target.files[0];
+  var progressBar = document.getElementById('progress-bar');
+  var progressInfos = document.getElementById('progress-infos');
+  var reader = new FileReader();
+
+  progressBar.value = 0;
+  progressInfos.innerHtml = 0;
+
+  reader.onprogress = function(e) {
+    var progress = Math.round( e.loaded / e.total * 100);
+    progressBar.value = progress;
+    progressInfos.innerHTML = progress;
+  };
+
+  reader.onload = function(e) {
+    progressBar.value = progressBar.max;
+    progressInfos.innerHTML = progressBar.max;
+    alert('Success!')
+  }
+
+  reader.readAsText(file);
+}
+
+document.getElementById('huge-file-palooza').addEventListener('change', handleHugeFile, false);</pre>
+  </div>
+  <script src="js/default.js"></script>
+  <script src="js/prettify.js"></script>
+</body>
+</html>
